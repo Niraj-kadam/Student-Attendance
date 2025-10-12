@@ -5,15 +5,38 @@ const QRScanner = () => {
   const [scanResult, setScanResult] = useState("");
   const [counter, setCounter] = useState(0);
 
+  // Handle scanning QR code
   const handleScan = (result) => {
-    if (result && result !== scanResult) {
+    if (result) {
       setScanResult(result);
       setCounter((prev) => prev + 1);
+
+      navigator.geolocation.getCurrentPosition(async (position) => {
+        const latitude = position.coords.latitude;
+        const longitude = position.coords.longitude;
+
+        const student_id = 1; // Replace with actual logged-in student ID
+        const session_id = result; // The scanned QR value
+
+        try {
+          const response = await fetch("http://localhost:5000/mark-attendance", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ student_id, session_id, latitude, longitude }),
+          });
+
+          const data = await response.text(); // Using .text() since backend sends string
+          alert(data);
+        } catch (error) {
+          console.error("❌ Error:", error);
+          alert("Error connecting to server.");
+        }
+      });
     }
   };
 
-  const handleError = (error) => {
-    console.error("QR Scan Error:", error);
+  const handleError = (err) => {
+    console.error("QR Scanner Error:", err);
   };
 
   return (
