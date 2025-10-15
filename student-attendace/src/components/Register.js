@@ -20,37 +20,68 @@ const Register = () => {
       alert("Registration successful! Please login.");
       navigate("/");
     } else {
-      alert("Registration failed!");
+      alert("Registration failed! Try again.");
     }
   };
 
   return (
-    <div style={{ textAlign: "center", marginTop: "50px" }}>
-      <h2>📝 Student Registration</h2>
-      <form onSubmit={handleRegister}>
-        <input
-          type="text"
-          placeholder="Enter Name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          required
-        /><br /><br />
-        <input
-          type="email"
-          placeholder="Enter Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        /><br /><br />
-        <input
-          type="password"
-          placeholder="Enter Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        /><br /><br />
-        <button type="submit">Register</button>
-      </form>
+    <div className="d-flex justify-content-center align-items-center vh-100 bg-light">
+      <div className="card shadow p-4" style={{ width: "400px", borderRadius: "15px" }}>
+        <h2 className="text-center mb-4">📝 Student Registration</h2>
+
+        <form onSubmit={handleRegister}>
+          <div className="mb-3">
+            <label className="form-label">Full Name</label>
+            <input
+              type="text"
+              className="form-control"
+              placeholder="Enter your name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+          </div>
+
+          <div className="mb-3">
+            <label className="form-label">Email address</label>
+            <input
+              type="email"
+              className="form-control"
+              placeholder="Enter your email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
+
+          <div className="mb-3">
+            <label className="form-label">Password</label>
+            <input
+              type="password"
+              className="form-control"
+              placeholder="Enter your password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
+
+          <button type="submit" className="btn btn-success w-100 mb-3">
+            Register
+          </button>
+        </form>
+
+        <p className="text-center">
+          Already have an account?{" "}
+          <span
+            className="text-primary"
+            style={{ cursor: "pointer", textDecoration: "underline" }}
+            onClick={() => navigate("/")}
+          >
+            Login here
+          </span>
+        </p>
+      </div>
     </div>
   );
 };
