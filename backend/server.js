@@ -99,22 +99,53 @@ app.post("/login", (req, res) => {
 // ===============================
 // 📅 MARK ATTENDANCE API
 // ===============================
+// ===============================
+// 📅 MARK ATTENDANCE API
+// ===============================
 app.post("/mark-attendance", (req, res) => {
   const { student_id, session_id, latitude, longitude } = req.body;
 
-  const query = `
-    INSERT INTO attendance (student_id, session_id, latitude, longitude)
-    VALUES (?, ?, ?, ?)
-  `;
+  // Check for missing values
+  if (!student_id || !session_id) {
+    return res.json({ success: false, message: "Missing data" });
+  }
 
-  db.query(query, [student_id, session_id, latitude, longitude], (err, result) => {
+  // 1️⃣ Check if attendance already exists for same student & session
+  const checkQuery =
+    "SELECT * FROM attendance WHERE student_id = ? AND session_id = ?";
+  db.query(checkQuery, [student_id, session_id], (err, result) => {
     if (err) {
-      console.error("❌ Error inserting attendance:", err);
-      res.status(500).json({ error: "Failed to mark attendance" });
-    } else {
-      console.log("✅ Attendance added:", result.insertId);
-      res.json({ message: "✅ Attendance marked successfully!" });
+      console.error("❌ Error checking attendance:", err);
+      return res.json({ success: false, message: "Database error" });
     }
+
+    if (result.length > 0) {
+      // Already marked
+      return res.json({
+        success: false,
+        message: "Attendance already marked for this session!",
+      });
+    }
+
+    // 2️⃣ If not marked, insert new attendance record
+    const insertQuery = `
+      INSERT INTO attendance (student_id, session_id, latitude, longitude)
+      VALUES (?, ?, ?, ?)
+    `;
+
+    db.query(
+      insertQuery,
+      [student_id, session_id, latitude, longitude],
+      (err, result) => {
+        if (err) {
+          console.error("❌ Error inserting attendance:", err);
+          res.json({ success: false, message: "Failed to mark attendance" });
+        } else {
+          console.log("✅ Attendance added:", result.insertId);
+          res.json({ success: true, message: "✅ Attendance marked successfully!" });
+        }
+      }
+    );
   });
 });
 
