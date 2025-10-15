@@ -41,7 +41,7 @@ const QRScanner = () => {
 
   return (
     <div style={{ textAlign: "center", marginTop: "40px" }}>
-      <h2>📷 QR Code Scanner</h2>
+      <h2>QR Code Scanner</h2>
       <div
         style={{
           width: "300px",
