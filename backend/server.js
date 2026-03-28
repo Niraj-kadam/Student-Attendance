@@ -361,15 +361,94 @@ app.get("/student/attendance-history/:student_id", (req, res) => {
   );
 });
 
+// Returns every student × every session for this teacher.
+// Students = not a teacher account.
+app.get("/teacher/all-attendance", authenticateToken, (req, res) => {
+  if (req.user.role !== "teacher")
+    return res.json({ success: false, message: "Unauthorized" });
+
+  const teacher_id = req.user.id;
+
+  // Step 1: get student IDs
+  db.query(
+    `SELECT st.id AS student_id, st.name, st.roll_number, st.branch
+     FROM students st
+     WHERE st.email NOT IN (SELECT email FROM teachers)`,
+    [],
+    (err, students) => {
+      if (err) return res.json({ success: false, message: "DB error (students)" });
+      if (!students.length) return res.json({ success: true, attendance: [] });
+
+      // Step 2: get all sessions for this teacher
+      db.query(
+        `SELECT id AS session_id,
+                DATE_FORMAT(session_date, '%Y-%m-%d') AS session_date,
+                subject AS session_subject
+         FROM sessions WHERE teacher_id = ?`,
+        [teacher_id],
+        (err, sessions) => {
+          if (err) return res.json({ success: false, message: "DB error (sessions)" });
+          if (!sessions.length) return res.json({ success: true, attendance: [] });
+
+          // Step 3: get all attendance rows for these sessions
+          const sessionIds = sessions.map(s => s.session_id);
+          db.query(
+            `SELECT student_id, session_id, status, marked_at, distance_from_class
+             FROM attendance WHERE session_id IN (?)`,
+            [sessionIds],
+            (err, attendanceRows) => {
+              if (err) return res.json({ success: false, message: "DB error (attendance)" });
+
+              // Build a lookup: "studentId_sessionId" → attendance row
+              const lookup = {};
+              attendanceRows.forEach(r => {
+                lookup[`${r.student_id}_${r.session_id}`] = r;
+              });
+
+              // Cross-join in JS: every student × every session
+              const results = [];
+              for (const session of sessions) {
+                for (const student of students) {
+                  const key = `${student.student_id}_${session.session_id}`;
+                  const att = lookup[key];
+                  results.push({
+                    student_id: student.student_id,
+                    name: student.name,
+                    roll_number: student.roll_number,
+                    branch: student.branch,
+                    session_id: session.session_id,
+                    session_date: session.session_date,
+                    session_subject: session.session_subject,
+                    status: att ? att.status : 'absent',
+                    marked_at: att ? att.marked_at : null,
+                    distance_from_class: att ? att.distance_from_class : null,
+                  });
+                }
+              }
+
+              res.json({ success: true, attendance: results });
+            }
+          );
+        }
+      );
+    }
+  );
+});
+
+// Returns all students for a specific session (scanned = real status, not scanned = absent).
 app.get("/teacher/session-attendance/:session_id", authenticateToken, (req, res) => {
   const { session_id } = req.params;
   db.query(
-    `SELECT st.name, st.roll_number, st.branch, a.status, a.marked_at, a.distance_from_class
+    `SELECT st.id AS student_id, st.name, st.roll_number, st.branch,
+            COALESCE(a.status, 'absent') AS status,
+            a.marked_at, a.distance_from_class
      FROM students st
-     LEFT JOIN attendance a ON a.student_id = st.id AND a.session_id = ?
-     WHERE a.session_id = ?
-     ORDER BY a.marked_at ASC`,
-    [session_id, session_id],
+     LEFT JOIN attendance a
+           ON  a.student_id = st.id
+           AND a.session_id = ?
+     WHERE st.email NOT IN (SELECT email FROM teachers)
+     ORDER BY a.marked_at ASC, st.name ASC`,
+    [session_id],
     (err, results) => {
       if (err) return res.json({ success: false, message: "DB error" });
       res.json({ success: true, attendance: results });
@@ -383,8 +462,9 @@ app.get("/teacher/analytics/:teacher_id", authenticateToken, (req, res) => {
     `SELECT 
       s.subject,
       s.session_date,
+      s.id as session_id,
       COUNT(a.id) as present_count,
-      s.id as session_id
+      (SELECT COUNT(*) FROM students) as total_students
      FROM sessions s
      LEFT JOIN attendance a ON s.id = a.session_id
      WHERE s.teacher_id = ?

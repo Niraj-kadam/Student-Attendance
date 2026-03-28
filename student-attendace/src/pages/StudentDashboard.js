@@ -28,8 +28,31 @@ const StudentDashboard = () => {
       fetch(`http://localhost:5000/student/attendance-summary/${user.id}`).then(r => r.json()),
       fetch(`http://localhost:5000/student/attendance-history/${user.id}`).then(r => r.json()),
     ]).then(([s, h]) => {
-      if (s.success) setSummary(s.summary);
-      if (h.success) setHistory(h.history.slice(0, 6));
+      // Always recompute stats from the full history so absences are counted correctly
+      if (h.success && h.history) {
+        // Normalize: null / undefined / empty status → "absent" (matches DB behaviour)
+        const fullHistory = h.history.map(r => ({
+          ...r,
+          status: (r.status || "absent").toLowerCase().trim(),
+        }));
+        const present = fullHistory.filter(r => r.status === "present").length;
+        const late    = fullHistory.filter(r => r.status === "late").length;
+        const absent  = fullHistory.filter(r => r.status === "absent").length;
+        const total   = fullHistory.length;
+        const percentage = total > 0 ? Math.round((present + late) / total * 100) : 0;
+
+        setSummary({
+          total_sessions: total,
+          present,
+          late,
+          absent,
+          percentage,
+        });
+        setHistory(fullHistory.slice(0, 6));
+      } else if (s.success) {
+        // Fallback to server summary if history fetch failed
+        setSummary(s.summary);
+      }
       setLoading(false);
     }).catch(() => setLoading(false));
   }, [user]);

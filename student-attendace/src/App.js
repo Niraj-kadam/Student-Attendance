@@ -10,6 +10,7 @@ import QRScanner from "./pages/QRScanner";
 import AttendanceHistory from "./pages/AttendanceHistory";
 import TeacherDashboard from "./pages/TeacherDashboard";
 import CreateSession from "./pages/CreateSession";
+import TeacherAnalytics from "./pages/TeacherAnalytics";
 
 // Page background wrapper
 const PageWrapper = ({ children }) => (
@@ -62,6 +63,11 @@ const AppRoutes = () => {
       <Route path="/teacher/create-session" element={
         <Protected allowedRole="teacher">
           <PageWrapper><CreateSession /></PageWrapper>
+        </Protected>
+      } />
+      <Route path="/teacher/analytics" element={
+        <Protected allowedRole="teacher">
+          <PageWrapper><TeacherAnalytics /></PageWrapper>
         </Protected>
       } />
 

@@ -11,11 +11,21 @@ const AttendanceHistory = () => {
     if (!user) return;
     fetch(`http://localhost:5000/student/attendance-history/${user.id}`)
       .then(r => r.json())
-      .then(d => { if (d.success) setHistory(d.history); setLoading(false); })
+      .then(d => {
+        if (d.success) {
+          // Normalize: null / undefined / empty status → "absent"
+          const normalized = d.history.map(r => ({
+            ...r,
+            status: (r.status || "absent").toLowerCase().trim(),
+          }));
+          setHistory(normalized);
+        }
+        setLoading(false);
+      })
       .catch(() => setLoading(false));
   }, [user]);
 
-  const filtered = filter === "all" ? history : history.filter(h => h.status === filter || (!h.status && filter === "absent"));
+  const filtered = filter === "all" ? history : history.filter(h => h.status === filter);
 
   const statusStyles = {
     present: { bg: "rgba(74,222,128,0.12)", color: "#4ade80", border: "rgba(74,222,128,0.3)" },
