@@ -4,7 +4,7 @@ const mysql = require("mysql2");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const QRCode = require("qrcode");
-const { v4: uuidv4 } = require("uuid");
+const { randomUUID: uuidv4 } = require('crypto');
 
 const app = express();
 app.use(cors({
@@ -28,19 +28,19 @@ const JWT_SECRET = process.env.JWT_SECRET || "attendance_system_secret_2024";
 const poolConfig = process.env.DATABASE_URL
   ? process.env.DATABASE_URL
   : {
-      host: process.env.DB_HOST || "localhost",
-      user: process.env.DB_USER || "root",
-      password: process.env.DB_PASSWORD || "",
-      database: process.env.DB_NAME || "attendance_system",
-      port: process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : 3307,
-      waitForConnections: true,
-      connectionLimit: 10,
-      queueLimit: 0,
-      ssl:
-        process.env.DB_SSL === "true" || process.env.MYSQL_SSL === "true"
-          ? { rejectUnauthorized: false }
-          : undefined,
-    };
+    host: process.env.DB_HOST || "localhost",
+    user: process.env.DB_USER || "root",
+    password: process.env.DB_PASSWORD || "",
+    database: process.env.DB_NAME || "attendance_system",
+    port: process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : 3307,
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0,
+    ssl:
+      process.env.DB_SSL === "true" || process.env.MYSQL_SSL === "true"
+        ? { rejectUnauthorized: false }
+        : undefined,
+  };
 
 const db = mysql.createPool(poolConfig);
 
@@ -169,9 +169,9 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
+    Math.cos((lat2 * Math.PI) / 180) *
+    Math.sin(dLon / 2) *
+    Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }
