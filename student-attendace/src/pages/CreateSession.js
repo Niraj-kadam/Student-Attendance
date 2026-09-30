@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { API_BASE_URL } from "../apiConfig";
 
 const CreateSession = () => {
   const { token } = useAuth();
@@ -32,7 +33,7 @@ const CreateSession = () => {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch("http://localhost:5000/teacher/create-session", {
+      const res = await fetch(`${API_BASE_URL}/teacher/create-session`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify(form),

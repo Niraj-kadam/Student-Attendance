@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
+import { API_BASE_URL } from "../apiConfig";
 
 const AttendanceHistory = () => {
   const { user } = useAuth();
@@ -9,7 +10,7 @@ const AttendanceHistory = () => {
 
   useEffect(() => {
     if (!user) return;
-    fetch(`http://localhost:5000/student/attendance-history/${user.id}`)
+    fetch(`${API_BASE_URL}/student/attendance-history/${user.id}`)
       .then(r => r.json())
       .then(d => {
         if (d.success) {

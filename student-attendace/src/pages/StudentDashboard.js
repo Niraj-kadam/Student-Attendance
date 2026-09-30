@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { API_BASE_URL } from "../apiConfig";
 
 const StatCard = ({ label, value, color, icon, sub }) => (
   <div style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "16px", padding: "24px", flex: 1 }}>
@@ -25,8 +26,8 @@ const StudentDashboard = () => {
   useEffect(() => {
     if (!user) return;
     Promise.all([
-      fetch(`http://localhost:5000/student/attendance-summary/${user.id}`).then(r => r.json()),
-      fetch(`http://localhost:5000/student/attendance-history/${user.id}`).then(r => r.json()),
+      fetch(`${API_BASE_URL}/student/attendance-summary/${user.id}`).then(r => r.json()),
+      fetch(`${API_BASE_URL}/student/attendance-history/${user.id}`).then(r => r.json()),
     ]).then(([s, h]) => {
       // Always recompute stats from the full history so absences are counted correctly
       if (h.success && h.history) {

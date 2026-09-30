@@ -1,0 +1,15 @@
+{
+  "name": "student-attendance-system",
+  "version": "1.0.0",
+  "description": "Student Attendance Management System with QR Code and Geofencing",
+  "scripts": {
+    "start": "node start-dev.js",
+    "dev": "node start-dev.js",
+    "backend": "npm start --prefix backend",
+    "frontend": "npm start --prefix student-attendace",
+    "build": "npm run build --prefix student-attendace"
+  },
+  "keywords": ["attendance", "react", "node", "mysql", "vercel", "geolocation", "qrcode"],
+  "author": "",
+  "license": "ISC"
+}

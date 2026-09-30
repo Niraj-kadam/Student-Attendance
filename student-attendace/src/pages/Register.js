@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { API_BASE_URL } from "../apiConfig";
 
 const Register = (props) => {
   const { role: paramRole } = useParams();
@@ -25,7 +26,7 @@ const Register = (props) => {
 
     const endpoint = role === "teacher" ? "/teacher/register" : "/register";
     try {
-      const response = await fetch(`http://localhost:5000${endpoint}`, {
+      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),

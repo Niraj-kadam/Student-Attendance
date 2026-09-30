@@ -7,27 +7,78 @@ const QRCode = require("qrcode");
 const { v4: uuidv4 } = require("uuid");
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: "*",
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+}));
 app.use(express.json());
 
-const JWT_SECRET = "attendance_system_secret_2024";
-
-// ✅ Connect to MySQL
-const db = mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "",
-  database: "attendance_system",
-  port: 3307,
+// Support both standard routes and /api/ prefixed routes
+app.use((req, res, next) => {
+  if (req.url.startsWith("/api/")) {
+    req.url = req.url.replace(/^\/api/, "") || "/";
+  }
+  next();
 });
 
-db.connect((err) => {
+const JWT_SECRET = process.env.JWT_SECRET || "attendance_system_secret_2024";
+
+// ✅ MySQL Pool Configuration (Optimized for Serverless & Cloud)
+const poolConfig = process.env.DATABASE_URL
+  ? process.env.DATABASE_URL
+  : {
+      host: process.env.DB_HOST || "localhost",
+      user: process.env.DB_USER || "root",
+      password: process.env.DB_PASSWORD || "",
+      database: process.env.DB_NAME || "attendance_system",
+      port: process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : 3307,
+      waitForConnections: true,
+      connectionLimit: 10,
+      queueLimit: 0,
+      ssl:
+        process.env.DB_SSL === "true" || process.env.MYSQL_SSL === "true"
+          ? { rejectUnauthorized: false }
+          : undefined,
+    };
+
+const db = mysql.createPool(poolConfig);
+
+// Verify initial connection & initialize tables
+db.getConnection((err, connection) => {
   if (err) {
-    console.error("❌ Database connection failed:", err);
+    console.error("❌ Database connection failed:", err.message);
   } else {
     console.log("✅ Connected to MySQL database");
+    connection.release();
     initializeTables();
   }
+});
+
+// ✅ Health check & Root diagnostics
+app.get("/", (req, res) => {
+  res.json({
+    status: "ok",
+    service: "Attendance Management API",
+    time: new Date().toISOString(),
+  });
+});
+
+app.get("/health", (req, res) => {
+  db.query("SELECT 1", (err) => {
+    if (err) {
+      return res.status(500).json({
+        status: "error",
+        database: "disconnected",
+        error: err.message,
+      });
+    }
+    res.json({
+      status: "ok",
+      database: "connected",
+      time: new Date().toISOString(),
+    });
+  });
 });
 
 // ✅ Auto-create tables on startup
@@ -498,5 +549,10 @@ app.patch("/notifications/read/:id", (req, res) => {
   });
 });
 
-// ✅ Start Server
-app.listen(5000, () => console.log("🚀 Server running on port 5000"));
+// ✅ Start Server locally; in Vercel serverless environment, Vercel invokes the exported app
+if (!process.env.VERCEL) {
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+}
+
+module.exports = app;

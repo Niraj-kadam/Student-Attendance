@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { API_BASE_URL } from "../apiConfig";
 
 export default function Header() {
   const { user, role, logout } = useAuth();
@@ -16,7 +17,7 @@ export default function Header() {
 
   const fetchNotifications = async () => {
     try {
-      const res = await fetch(`http://localhost:5000/notifications/${user.id}/${role}`);
+      const res = await fetch(`${API_BASE_URL}/notifications/${user.id}/${role}`);
       const data = await res.json();
       if (data.success) {
         setNotifications(data.notifications);

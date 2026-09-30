@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { Html5QrcodeScanner } from "html5-qrcode";
 import { useEffect } from "react";
+import { API_BASE_URL } from "../apiConfig";
 
 const QRScanner = () => {
   const { user } = useAuth();
@@ -87,7 +88,7 @@ const QRScanner = () => {
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         try {
-          const res = await fetch("http://localhost:5000/mark-attendance", {
+          const res = await fetch(`${API_BASE_URL}/mark-attendance`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -107,7 +108,7 @@ const QRScanner = () => {
       },
       () => {
         // No location available, try without
-        fetch("http://localhost:5000/mark-attendance", {
+        fetch(`${API_BASE_URL}/mark-attendance`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

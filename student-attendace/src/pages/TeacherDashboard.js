@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { API_BASE_URL } from "../apiConfig";
 
 const TeacherDashboard = ({ initialTab }) => {
   const { user, token } = useAuth();
@@ -46,7 +47,7 @@ const TeacherDashboard = ({ initialTab }) => {
 
   const fetchSessions = async () => {
     try {
-      const res = await fetch("http://localhost:5000/teacher/sessions", {
+      const res = await fetch(`${API_BASE_URL}/teacher/sessions`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -57,7 +58,7 @@ const TeacherDashboard = ({ initialTab }) => {
 
   const fetchAllAttendance = async () => {
     try {
-      const res = await fetch("http://localhost:5000/teacher/all-attendance", {
+      const res = await fetch(`${API_BASE_URL}/teacher/all-attendance`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -71,7 +72,7 @@ const TeacherDashboard = ({ initialTab }) => {
     try {
       const allData = [];
       for (const session of sessions) {
-        const res = await fetch(`http://localhost:5000/teacher/session-attendance/${session.id}`, {
+        const res = await fetch(`${API_BASE_URL}/teacher/session-attendance/${session.id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();
@@ -96,7 +97,7 @@ const TeacherDashboard = ({ initialTab }) => {
   };
 
   const toggleSession = async (id) => {
-    await fetch(`http://localhost:5000/teacher/session/${id}/toggle`, {
+    await fetch(`${API_BASE_URL}/teacher/session/${id}/toggle`, {
       method: "PATCH",
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -107,7 +108,7 @@ const TeacherDashboard = ({ initialTab }) => {
     setSelectedSession(session);
     setLoadingAttendance(true);
     try {
-      const res = await fetch(`http://localhost:5000/teacher/session-attendance/${session.id}`, {
+      const res = await fetch(`${API_BASE_URL}/teacher/session-attendance/${session.id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
